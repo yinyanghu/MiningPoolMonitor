@@ -262,6 +262,12 @@ class NanoPool:
         + str(self.estimation)
 
 
+class Ethermine:
+    def __init__(self):
+        pass
+
+
+
 
 etn_nanopool = NanoPool('Electroneum (ETN)','etn', etn_wallet_address)
 pas_nanopool = NanoPool('PascalCoin (PAS)','pasc', pas_wallet_address)
