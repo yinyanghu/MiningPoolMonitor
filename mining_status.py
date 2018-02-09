@@ -5,7 +5,7 @@ import time
 import os
 
 etn_wallet_address = 'etnkH3JcwEG4i2eApbeJk6fYMGmYAWc9yCZmVWEWdsa9XETkzWEY6o9M76AGhWUnrBVzuCor7vGSQHgxYLmdUGeeAaPih64cmM'
-pasc_wallet_address = '86646.2f6e24867ad0c6fd'
+pas_wallet_address = '86646.2f6e24867ad0c6fd'
 
 def request_data(url):
     r = requests.get(url).json()
@@ -263,16 +263,16 @@ class NanoPool:
 
 
 
-etn_nanopool = NanoPool('Electroneum','etn', etn_wallet_address)
-pasc_nanopool = NanoPool('PascalCoin','pasc', pasc_wallet_address)
+etn_nanopool = NanoPool('Electroneum (ETN)','etn', etn_wallet_address)
+pas_nanopool = NanoPool('PascalCoin (PAS)','pasc', pas_wallet_address)
 
 def etn():
     etn_nanopool.update()
     print(str(etn_nanopool))
 
-def pasc():
-    pasc_nanopool.update()
-    print(str(pasc_nanopool))
+def pas():
+    pas_nanopool.update()
+    print(str(pas_nanopool))
 
 if __name__ == '__main__':
     while True:
@@ -280,5 +280,5 @@ if __name__ == '__main__':
         etn()
         time.sleep(30)
         os.system('clear')
-        pasc()
+        pas()
         time.sleep(30)
