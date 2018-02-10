@@ -6,6 +6,8 @@ import os
 
 etn_wallet_address = 'etnkH3JcwEG4i2eApbeJk6fYMGmYAWc9yCZmVWEWdsa9XETkzWEY6o9M76AGhWUnrBVzuCor7vGSQHgxYLmdUGeeAaPih64cmM'
 pas_wallet_address = '86646.2f6e24867ad0c6fd'
+eth_wallet_address = '45f410e92683dAE322d91F2C8b26193b0FC3464D'
+
 
 def request_data(url):
     r = requests.get(url).json()
@@ -40,10 +42,10 @@ class Worker:
 
     def __str__(self):
         return self.id + ': ' \
-        + 'Hashrate: ' + format_hashrate(self.hashrate) + ', ' \
-        + '1 Hour Hashrate: ' + format_hashrate(self.avg_h1) + ', ' \
-        + 'Last Share: ' + str(self.lastshare) + ', ' \
-        + 'Rating: ' + str(self.rating)
+            + 'Hashrate: ' + format_hashrate(self.hashrate) + ', ' \
+            + '1 Hour Hashrate: ' + format_hashrate(self.avg_h1) + ', ' \
+            + 'Last Share: ' + str(self.lastshare) + ', ' \
+            + 'Rating: ' + str(self.rating)
 
 
 class Payment:
@@ -54,9 +56,8 @@ class Payment:
 
     def __str__(self):
         return 'Amount: ' + str(self.amount) + ', ' \
-        + 'Date: ' + str(self.date) + ', ' \
-        + 'Confirmed: ' + str(self.confirmed)
-
+            + 'Date: ' + str(self.date) + ', ' \
+            + 'Confirmed: ' + str(self.confirmed)
 
 
 class Account:
@@ -81,7 +82,7 @@ class Account:
         # print(data)
         self.__update_general(data)
 
-        url = self.pool.api + self.pool.coin + '/reportedhashrate/' + self.wallet_address
+        url = self.pool.api + self.pool.coin + '/reportedhashrate/'+ self.wallet_address
         data = request_data(url)
         # print(data)
         self.__update_reported_hashrate(data)
@@ -124,25 +125,24 @@ class Account:
             self.payments.append(payment)
             self.total_payment += payment.amount
 
-
     def __str__(self):
         return 'Account: ' + self.wallet_address[:10] + '...' + self.wallet_address[-10:] + '\n' \
-        + '--------------------------------------' + '\n' \
-        + 'Balance: ' + str(self.balance) + '\n' \
-        + 'Unconfirmed Balance: ' + str(self.unconfirmed_balance) + '\n' \
-        + '\n' \
-        + 'Hashrate: ' + '\n' \
-        + '\t' + 'Current: ' + format_hashrate(self.current_hashrate) + '\n' \
-        + '\t' + 'Current Reported: ' + format_hashrate(self.current_reported_hashrate) + '\n' \
-        + '\t' + '1 Hour Average: ' + format_hashrate(self.avg_hashrate['h1']) + '\n' \
-        + '\t' + '24 Hours Average: ' + format_hashrate(self.avg_hashrate['h24']) + '\n' \
-        + '\n' \
-        + 'Workers:' + '\n\t' \
-        + '\n\t'.join([str(worker) for worker in self.workers]) + '\n' \
-        + '\n' \
-        + 'Payment:' + '\n' \
-        + '\t' + 'Total Amount: ' + str(self.total_payment) + '\n\t' \
-        + '\n\t'.join([str(payment) for payment in self.payments[:2]])
+            + '--------------------------------------' + '\n' \
+            + 'Balance: ' + str(self.balance) + '\n' \
+            + 'Unconfirmed Balance: ' + str(self.unconfirmed_balance) + '\n' \
+            + '\n' \
+            + 'Hashrate: ' + '\n' \
+            + '\t' + 'Current: ' + format_hashrate(self.current_hashrate) + '\n' \
+            + '\t' + 'Current Reported: ' + format_hashrate(self.current_reported_hashrate) + '\n' \
+            + '\t' + '1 Hour Average: ' + format_hashrate(self.avg_hashrate['h1']) + '\n' \
+            + '\t' + '24 Hours Average: ' + format_hashrate(self.avg_hashrate['h24']) + '\n' \
+            + '\n' \
+            + 'Workers:' + '\n\t' \
+            + '\n\t'.join([str(worker) for worker in self.workers]) + '\n' \
+            + '\n' \
+            + 'Payment:' + '\n' \
+            + '\t' + 'Total Amount: ' + str(self.total_payment) + '\n\t' \
+            + '\n\t'.join([str(payment) for payment in self.payments[:2]])
 
 
 class Price:
@@ -163,9 +163,9 @@ class Price:
 
     def __str__(self):
         return 'Price:' + '\n' \
-        + '--------------------------------------' + '\n' \
-        + '\t' + 'USD: ' + str(self.usd) + '\n' \
-        + '\t' + 'BTC: ' + str(self.btc)
+            + '--------------------------------------' + '\n' \
+            + '\t' + 'USD: ' + str(self.usd) + '\n' \
+            + '\t' + 'BTC: ' + str(self.btc)
 
 
 class Estimation:
@@ -203,12 +203,12 @@ class Estimation:
 
     def __str__(self):
         return 'Estimation:' + '\n' \
-        + '--------------------------------------' + '\n' \
-        + '\t' + 'Total: ' + str(self.estimated_profit) + ' USD' + '\n' \
-        + '\t' + 'Next Payment: ' + str(self.next_payment_time) + ' hours' + '\n' \
-        + '\t' + 'Hour: ' + str(self.hour_coin) + ' (' + str(self.hour_usd) + ' USD)' + '\n' \
-        + '\t' + 'Day: ' + str(self.day_coin) + ' (' + str(self.day_usd) + ' USD)' + '\n' \
-        + '\t' + 'Month: ' + str(self.month_coin) + ' (' + str(self.month_usd) + ' USD)'
+            + '--------------------------------------' + '\n' \
+            + '\t' + 'Total: ' + str(self.estimated_profit) + ' USD' + '\n' \
+            + '\t' + 'Next Payment: ' + str(self.next_payment_time) + ' hours' + '\n' \
+            + '\t' + 'Hour: ' + str(self.hour_coin) + ' (' + str(self.hour_usd) + ' USD)' + '\n' \
+            + '\t' + 'Day: ' + str(self.day_coin) + ' (' + str(self.day_usd) + ' USD)' + '\n' \
+            + '\t' + 'Month: ' + str(self.month_coin) + ' (' + str(self.month_usd) + ' USD)'
 
 
 class NanoPool:
@@ -230,7 +230,6 @@ class NanoPool:
         data = request_data(url)
         return float(data['payout'])
 
-
     def update(self):
         url = self.api + self.coin + '/pool/hashrate'
         self.hashrate = float(request_data(url))
@@ -248,37 +247,47 @@ class NanoPool:
 
     def __str__(self):
         return self.name + '\n' \
-        + '===========' + '\n' \
-        + '\n' \
-        + 'Pool:' + '\n' \
-        + '--------------------------------------' + '\n' \
-        + '\t' + 'Hashrate: ' + format_hashrate(self.hashrate) + '\n' \
-        + '\t' + 'Payment Limit: ' + str(self.payment_limit) + '\n' \
-        + '\n' \
-        + str(self.account) + '\n' \
-        + '\n' \
-        + str(self.price) + '\n' \
-        + '\n' \
-        + str(self.estimation)
+            + '===========' + '\n' \
+            + '\n' \
+            + 'Pool:' + '\n' \
+            + '--------------------------------------' + '\n' \
+            + '\t' + 'Hashrate: ' + format_hashrate(self.hashrate) + '\n' \
+            + '\t' + 'Payment Limit: ' + str(self.payment_limit) + '\n' \
+            + '\n' \
+            + str(self.account) + '\n' \
+            + '\n' \
+            + str(self.price) + '\n' \
+            + '\n' \
+            + str(self.estimation)
 
 
 class Ethermine:
-    def __init__(self):
+    def __init__(self, name, wallet_address):
+        self.api = 'http://api.ethermine.org'
+        self.name = name
+
+    def update(self):
         pass
 
 
+etn_nanopool = NanoPool('Electroneum (ETN)', 'etn', etn_wallet_address)
+pas_nanopool = NanoPool('PascalCoin (PAS)', 'pasc', pas_wallet_address)
+eth_ethermine = Ethermine('Ethereum (ETH)', eth_wallet_address)
 
-
-etn_nanopool = NanoPool('Electroneum (ETN)','etn', etn_wallet_address)
-pas_nanopool = NanoPool('PascalCoin (PAS)','pasc', pas_wallet_address)
 
 def etn():
     etn_nanopool.update()
     print(str(etn_nanopool))
 
+
 def pas():
     pas_nanopool.update()
     print(str(pas_nanopool))
+
+
+def eth():
+    eth_ethermine.update()
+
 
 if __name__ == '__main__':
     while True:
