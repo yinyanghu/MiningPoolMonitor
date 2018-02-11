@@ -1,5 +1,4 @@
 import requests
-import json
 import datetime
 import time
 import os
@@ -11,12 +10,13 @@ eth_wallet_address = '45f410e92683dAE322d91F2C8b26193b0FC3464D'
 
 def request_data(url):
     r = requests.get(url).json()
-    if r['status'] == True:
+    if r['status']:
         return r['data']
     else:
         print(r)
         print("Error: " + url)
         return None
+
 
 def format_hashrate(hashrate):
     hashrate = float(hashrate)
