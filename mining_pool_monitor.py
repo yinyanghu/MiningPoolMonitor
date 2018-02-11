@@ -29,30 +29,26 @@ def format_hashrate(hashrate):
 
 
 class Worker:
-    def __init__(self, data):
-        self.id = data['id']
-        self.rating = int(data['rating'])
-        self.hashrate = float(data['hashrate'])
-        self.lastshare = datetime.datetime.fromtimestamp(data['lastshare'])
-        self.avg_h1 = float(data['h1'])
-        self.avg_h3 = float(data['h3'])
-        self.avg_h6 = float(data['h6'])
-        self.avg_h12 = float(data['h12'])
-        self.avg_h24 = float(data['h24'])
+    def __init__(self, name, rating, hashrate, lastshare, avg_hashrate):
+        self.name = name
+        self.rating = rating
+        self.hashrate = hashrate
+        self.lastshare = lastshare
+        self.avg_hashrate = avg_hashrate
 
     def __str__(self):
         return self.id + ': ' \
             + 'Hashrate: ' + format_hashrate(self.hashrate) + ', ' \
-            + '1 Hour Hashrate: ' + format_hashrate(self.avg_h1) + ', ' \
+            + '1 Hour Hashrate: ' + format_hashrate(self.avg_hashrate['h1']) + ', ' \
             + 'Last Share: ' + str(self.lastshare) + ', ' \
             + 'Rating: ' + str(self.rating)
 
 
 class Payment:
-    def __init__(self, data):
-        self.amount = float(data['amount'])
-        self.confirmed = bool(data['confirmed'])
-        self.date = datetime.datetime.fromtimestamp(data['date'])
+    def __init__(self, amount, confirmed, date):
+        self.amount = amount
+        self.confirmed = confirmed
+        self.date = date
 
     def __str__(self):
         return 'Amount: ' + str(self.amount) + ', ' \
@@ -61,9 +57,8 @@ class Payment:
 
 
 class Account:
-    def __init__(self, pool, wallet_address):
+    def __init__(self, wallet_address):
         self.wallet_address = wallet_address
-        self.pool = pool
 
         self.balance = 0
         self.unconfirmed_balance = 0
@@ -76,22 +71,6 @@ class Account:
         self.payments = []
         self.total_payment = 0
 
-    def update(self):
-        url = self.pool.api + self.pool.coin + '/user/' + self.wallet_address
-        data = request_data(url)
-        # print(data)
-        self.__update_general(data)
-
-        url = self.pool.api + self.pool.coin + '/reportedhashrate/'+ self.wallet_address
-        data = request_data(url)
-        # print(data)
-        self.__update_reported_hashrate(data)
-
-        url = self.pool.api + self.pool.coin + '/payments/' + self.wallet_address
-        data = request_data(url)
-        # print(data)
-        self.__update_payments(data)
-
     def get_all_balance(self):
         return self.balance + self.unconfirmed_balance
 
@@ -101,28 +80,21 @@ class Account:
     def get_total_payment(self):
         return self.total_payment
 
-    def __update_general(self, data):
-        self.balance = float(data['balance'])
-        self.unconfirmed_balance = float(data['unconfirmed_balance'])
-        self.current_hashrate = float(data['hashrate'])
-        self.avg_hashrate = data['avgHashrate']
-        self.__update_workers(data['workers'])
+    def update(self, balance, unconfirmed_balance, current_hashrate, current_reported_hashrate, avg_hashrate):
+        self.balance = balance
+        self.unconfirmed_balance = unconfirmed_balance
+        self.current_hashrate = current_hashrate
+        self.current_reported_hashrate = current_reported_hashrate
+        self.avg_hashrate = avg_hashrate
 
-    def __update_reported_hashrate(self, data):
-        self.current_reported_hashrate = float(data)
+    def update_workers(self, workers):
+        self.workers = workers
 
-    def __update_workers(self, data):
-        self.workers = []
-        for worker in data:
-            self.workers.append(Worker(worker))
-        self.workers.sort(key=lambda worker: worker.hashrate, reverse=True)
+    def update_payments(self, payments):
+        self.payments = payments
 
-    def __update_payments(self, data):
-        self.payments = []
         self.total_payment = 0
-        for one in data:
-            payment = Payment(one)
-            self.payments.append(payment)
+        for payment in payments:
             self.total_payment += payment.amount
 
     def __str__(self):
@@ -146,17 +118,13 @@ class Account:
 
 
 class Price:
-    def __init__(self, pool):
-        self.pool = pool
-
+    def __init__(self):
         self.usd = 0
         self.btc = 0
 
-    def update(self):
-        url = self.pool.api + self.pool.coin + '/prices'
-        data = request_data(url)
-        self.usd = float(data['price_usd'])
-        self.btc = float(data['price_btc'])
+    def update(self, usd, btc):
+        self.usd = usd
+        self.btc = btc
 
     def get_usd_price(self):
         return self.usd
@@ -164,14 +132,12 @@ class Price:
     def __str__(self):
         return 'Price:' + '\n' \
             + '--------------------------------------' + '\n' \
-            + '\t' + 'USD: ' + str(self.usd) + '\n' \
+            + '\t' + 'USD: $' + str(self.usd) + '\n' \
             + '\t' + 'BTC: ' + str(self.btc)
 
 
 class Estimation:
-    def __init__(self, pool):
-        self.pool = pool
-
+    def __init__(self):
         self.estimated_profit = 0
         self.hashrate = 0
 
@@ -184,20 +150,16 @@ class Estimation:
 
         self.next_payment_time = 0
 
-    def update(self, hashrate, estimated_profit, balance):
+    def update(self, hashrate, estimated_profit, balance, hour_coin, hour_usd, day_coin, day_usd, month_coin, month_usd):
         self.hashrate = hashrate
         self.estimated_profit = estimated_profit
 
-        url = self.pool.api + self.pool.coin + '/approximated_earnings/' + str(hashrate)
-        data = request_data(url)
-        # print(data)
-
-        self.hour_coin = float(data['hour']['coins'])
-        self.hour_usd = float(data['hour']['dollars'])
-        self.day_coin = float(data['day']['coins'])
-        self.day_usd = float(data['day']['dollars'])
-        self.month_coin = float(data['month']['coins'])
-        self.month_usd = float(data['month']['dollars'])
+        self.hour_coin = hour_coin
+        self.hour_usd = hour_usd
+        self.day_coin = day_coin
+        self.day_usd = day_usd
+        self.month_coin = month_coin
+        self.month_usd = month_usd
 
         self.next_payment_time = max(0, (self.pool.get_payment_limit() - balance) / self.hour_coin)
 
@@ -223,21 +185,94 @@ class NanoPool:
         self.account = Account(self, wallet_address)
         self.price = Price(self)
 
-        self.estimation = Estimation(self)
+        self.estimation = Estimation()
 
     def __get_payment_limit(self, wallet_address):
         url = self.api + self.coin + '/usersettings/' + wallet_address
         data = request_data(url)
         return float(data['payout'])
 
+
     def update(self):
+        url = self.pool.api + self.pool.coin + '/user/' + self.wallet_address
+        data = request_data(url)
+        # print(data)
+        self.__update_general(data)
+
+        url = self.pool.api + self.pool.coin + '/reportedhashrate/'+ self.wallet_address
+        data = request_data(url)
+        # print(data)
+        self.__update_reported_hashrate(data)
+
+        url = self.pool.api + self.pool.coin + '/payments/' + self.wallet_address
+        data = request_data(url)
+        # print(data)
+        self.__update_payments(data)
+
+    def __update_general(self, data):
+        self.balance = float(data['balance'])
+        self.unconfirmed_balance = float(data['unconfirmed_balance'])
+        self.current_hashrate = float(data['hashrate'])
+        self.avg_hashrate = data['avgHashrate']
+        self.__update_workers(data['workers'])
+
+    def __update_reported_hashrate(self, data):
+        self.current_reported_hashrate = float(data)
+
+    def __update_workers(self, data):
+        self.workers = []
+        for one in data:
+            name = one['id']
+            rating = int(one['rating'])
+            hashrate = float(one['hashrate'])
+            lastshare = datetime.datetime.fromtimestamp(one['lastshare'])
+            avg_h1 = float(one['h1'])
+            avg_h3 = float(one['h3'])
+            avg_h6 = float(one['h6'])
+            avg_h12 = float(one['h12'])
+            avg_h24 = float(one['h24'])
+            worker = Worker(id, name, rating, hashrate, lastshare, avg_h1, avg_h3, avg_h6, avg_h12, avg_h24)
+            self.workers.append(worker)
+        self.workers.sort(key=lambda worker: worker.hashrate, reverse=True)
+
+    def __update_payments(self, data):
+        for one in data:
+            amount = float(data['amount'])
+            confirmed = bool(data['confirmed'])
+            date = datetime.datetime.fromtimestamp(data['date'])
+            payment = Payment(amount, confirmed, date)
+
+    def update(self):
+        self.__update_pool_hashrate()
+        self.account.update()
+        self.__update_price()
+        self.__update_estimation()
+
+    def __update_pool_hashrate(self):
         url = self.api + self.coin + '/pool/hashrate'
         self.hashrate = float(request_data(url))
 
-        self.account.update()
-        self.price.update()
+    def __update_price(self):
+        url = self.api + self.coin + '/prices'
+        data = request_data(url)
+        usd = float(data['price_usd'])
+        btc = float(data['price_btc'])
+        self.price.update(usd, btc)
 
-        self.estimation.update(self.account.get_hashrate(), self.__get_profit(), self.account.get_all_balance())
+    def __update_estimation(self):
+        current_hashrate = self.account.get_hashrate()
+        url = self.api + self.coin + '/approximated_earnings/' + str(current_hashrate)
+        data = request_data(url)
+
+        hour_coin = float(data['hour']['coins'])
+        hour_usd = float(data['hour']['dollars'])
+        day_coin = float(data['day']['coins'])
+        day_usd = float(data['day']['dollars'])
+        month_coin = float(data['month']['coins'])
+        month_usd = float(data['month']['dollars'])
+
+        self.estimation.update(current_hashrate, self.__get_profit(), self.account.get_all_balance(), \
+            hour_coin, hour_usd, day_coin, day_usd, month_coin, month_usd)
 
     def get_payment_limit(self):
         return self.payment_limit
@@ -261,13 +296,37 @@ class NanoPool:
             + str(self.estimation)
 
 
+class Network:
+    def __init__(self):
+
+
+
 class Ethermine:
     def __init__(self, name, wallet_address):
         self.api = 'http://api.ethermine.org'
         self.name = name
 
+        self.hashrate = 0
+        self.price = Price()
+
     def update(self):
-        pass
+        url = self.api + "/poolStats"
+        data = request_data(url)
+        self.hashrate = data['poolStats']['hashRate']
+        self.price.update(data['price']['usd'], data['price']['btc'])
+
+    def __str__(self):
+        return self.name + '\n' \
+            + '===========' + '\n' \
+            + '\n' \
+            + 'Pool:' + '\n' \
+            + '--------------------------------------' + '\n' \
+            + '\t' + 'Hashrate: ' + format_hashrate(self.hashrate) + '\n' \
+            + '\n' \
+            + str(self.price) + '\n' \
+            + '\n'
+
+
 
 
 etn_nanopool = NanoPool('Electroneum (ETN)', 'etn', etn_wallet_address)
@@ -287,13 +346,15 @@ def pas():
 
 def eth():
     eth_ethermine.update()
+    print(str(eth_ethermine))
 
 
 if __name__ == '__main__':
-    while True:
-        os.system('clear')
-        etn()
-        time.sleep(30)
-        os.system('clear')
-        pas()
-        time.sleep(30)
+    eth()
+#    while True:
+#        os.system('clear')
+#        etn()
+#        time.sleep(30)
+#        os.system('clear')
+#        pas()
+#        time.sleep(30)
