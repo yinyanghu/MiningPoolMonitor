@@ -82,9 +82,13 @@ class Payment:
         self.amount = amount
         self.confirmed = confirmed
         self.date = date
+        self.duration = None
+
+    def update_duration(self, duration):
+        self.duration = duration
 
     def __str__(self):
-        return 'Amount: %.10f, Date: %s, Confirmed: %s' % (self.amount, str(self.date), str(self.confirmed))
+        return 'Amount: %.10f, Date: %s, Duration: %.2f hours, Confirmed: %s' % (self.amount, str(self.date), self.duration, str(self.confirmed))
 
 
 class Account:
@@ -146,6 +150,10 @@ class Account:
         self.workers = workers
 
     def update_payments(self, payments):
+        for i in range(len(payments) - 1):
+            diff = payments[i].date - payments[i + 1].date
+            hours = diff.seconds / 3600 + diff.days * 24
+            payments[i].update_duration(hours)
         self.payments = payments
 
         self.total_payment = 0
@@ -385,19 +393,20 @@ class NanoPool:
         return self.account.get_total_payment() * self.price.get_usd_price()
 
     def __str__(self):
-        return self.name + '\n' \
-            + '===========' + '\n' \
-            + '\n' \
-            + 'Pool:' + '\n' \
-            + '--------------------------------------' + '\n' \
-            + '\t' + 'Hashrate: ' + format_hashrate(self.hashrate) + '\n' \
-            + '\t' + 'Payment Limit: ' + str(self.payment_limit) + '\n' \
-            + '\n' \
-            + str(self.account) + '\n' \
-            + '\n' \
-            + str(self.price) + '\n' \
-            + '\n' \
-            + str(self.estimation)
+        s = self.name + '\n'
+        s += '==================' + '\n'
+        s += '\n'
+        s += 'Pool:' + '\n'
+        s += '--------------------------------------' + '\n'
+        s += '\t' + 'Hashrate: ' + format_hashrate(self.hashrate) + '\n'
+        s += '\t' + 'Payment Limit: ' + str(self.payment_limit) + '\n'
+        s += '\n'
+        s += str(self.account) + '\n'
+        s += '\n'
+        s += str(self.price) + '\n'
+        s += '\n'
+        s += str(self.estimation)
+        return s
 
 
 class Ethermine:
@@ -502,7 +511,7 @@ class Ethermine:
 
     def __str__(self):
         s = self.name + '\n'
-        s += '==============' + '\n'
+        s += '==================' + '\n'
         s += '\n'
         s += 'Pool:' + '\n'
         s += '--------------------------------------' + '\n'
