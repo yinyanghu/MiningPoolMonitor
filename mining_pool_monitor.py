@@ -162,31 +162,29 @@ class Account:
 
     def __str__(self):
         s = 'Account: ' + format_wallet_address(self.wallet_address) + '\n'
-        s += '--------------------------------------' + '\n'
-        s += 'Balance: %.10f' % (self.balance) + '\n'
+        s += '\t' + 'Balance: %.10f' % (self.balance)
         if self.unconfirmed_balance is not None:
-            s += 'Unconfirmed Balance: %.10f' % (self.unconfirmed_balance) + '\n'
+            s += '\t' + 'Unconfirmed Balance: %.10f' % (self.unconfirmed_balance)
         if self.last_seen is not None:
-            s += 'Last Seen: ' + str(self.last_seen) + '\n'
-        s += '\n'
+            s += '\t' + 'Last Seen: ' + str(self.last_seen)
+        s += '\n' + '\n'
         s += 'Hashrate: ' + '\n'
-        s += '\t' + 'Current: ' + format_hashrate(self.current_hashrate) + '\n'
+        s += '\t' + 'Current: ' + format_hashrate(self.current_hashrate)
         if self.current_reported_hashrate is not None:
             s += '\t' + 'Current Reported: ' \
-                + format_hashrate(self.current_reported_hashrate) + '\n'
+                + format_hashrate(self.current_reported_hashrate)
         if self.avg_hashrate is not None:
             if 'h1' in self.avg_hashrate:
                 s += '\t' + '1 Hour Average: ' \
-                    + format_hashrate(self.avg_hashrate['h1']) + '\n'
+                    + format_hashrate(self.avg_hashrate['h1'])
 
             if 'h24' in self.avg_hashrate:
                 s += '\t' + '1 Day Average: ' \
-                    + format_hashrate(self.avg_hashrate['h24']) + '\n'
-        if self.valid_share is not None:
-            s += '\t' + 'Valid Share: %d (%.2f%%)' % (self.valid_share, self.valid_percent) + '\n'
-        if self.invalid_share is not None:
-            s += '\t' + 'Invalid Share: %d (%.2f%%)' % (self.invalid_share, self.invalid_percent) + '\n'
-        if self.stale_share is not None:
+                    + format_hashrate(self.avg_hashrate['h24'])
+        s += '\n'
+        if (self.valid_share is not None) and (self.invalid_share is not None) and (self.stale_share is not None):
+            s += '\t' + 'Valid Share: %d (%.2f%%)' % (self.valid_share, self.valid_percent)
+            s += '\t' + 'Invalid Share: %d (%.2f%%)' % (self.invalid_share, self.invalid_percent)
             s += '\t' + 'Stale Share: %d (%.2f%%)' % (self.stale_share, self.stale_percent) + '\n'
         s += '\n'
         s += 'Workers:' + '\n'
@@ -212,8 +210,7 @@ class Price:
 
     def __str__(self):
         return 'Price:' + '\n' \
-            + '--------------------------------------' + '\n' \
-            + '\t' + 'USD: $' + str(self.usd) + '\n' \
+            + '\t' + 'USD: $' + str(self.usd) + ',' \
             + '\t' + 'BTC: ' + str(self.btc)
 
 
@@ -262,10 +259,9 @@ class Estimation:
 
     def __str__(self):
         s = 'Estimation:' + '\n'
-        s += '--------------------------------------' + '\n'
         s += '\t' + 'Total: $%.2f' % self.estimated_profit + '\n'
-        s += '\t' + ' Hour: %.10f ($%.2f)' % (self.hour_coin, self.hour_usd) + '\n'
-        s += '\t' + '  Day: %.10f ($%.2f)' % (self.day_coin, self.day_usd) + '\n'
+        s += '\t' + 'Hour: %.10f ($%.2f)' % (self.hour_coin, self.hour_usd)
+        s += '\t' + 'Day: %.10f ($%.2f)' % (self.day_coin, self.day_usd)
         s += '\t' + 'Month: %.10f ($%.2f)' % (self.month_coin, self.month_usd) + '\n'
         s += '\t' + 'Next Payment: %.2f hours' % self.next_payment_time
         return s
@@ -284,7 +280,6 @@ class Network:
 
     def __str__(self):
         s = 'Network:' + '\n'
-        s += '--------------------------------------' + '\n'
         s += '\t' + 'Hashrate: ' + format_hashrate(self.hashrate) + '\n'
         s += '\t' + 'Block Time: %.1fs' % self.block_time + '\n'
         s += '\t' + 'Difficulty: ' + format_number(self.difficulty)
@@ -397,7 +392,6 @@ class NanoPool:
         s += '==================' + '\n'
         s += '\n'
         s += 'Pool:' + '\n'
-        s += '--------------------------------------' + '\n'
         s += '\t' + 'Hashrate: ' + format_hashrate(self.hashrate) + '\n'
         s += '\t' + 'Payment Limit: ' + str(self.payment_limit) + '\n'
         s += '\n'
@@ -514,7 +508,6 @@ class Ethermine:
         s += '==================' + '\n'
         s += '\n'
         s += 'Pool:' + '\n'
-        s += '--------------------------------------' + '\n'
         s += '\t' + 'Hashrate: %s (%.2f%%)' % (format_hashrate(self.hashrate), self.hashrate_percent) + '\n'
         s += '\t' + 'Payment Limit: ' + str(self.payment_limit) + '\n'
         s += '\n'
