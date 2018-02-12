@@ -540,12 +540,13 @@ def eth():
 
 
 if __name__ == '__main__':
-    etn()
-    eth()
-#    while True:
-#        os.system('clear')
-#        etn()
-#        time.sleep(30)
-#        os.system('clear')
-#        pas()
-#        time.sleep(30)
+    while True:
+        os.system('clear')
+        eth()
+        time.sleep(30)
+        os.system('clear')
+        etn()
+        time.sleep(30)
+        os.system('clear')
+        pas()
+        time.sleep(30)
