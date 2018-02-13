@@ -7,6 +7,31 @@ etn_wallet_address = 'etnkH3JcwEG4i2eApbeJk6fYMGmYAWc9yCZmVWEWdsa9XETkzWEY6o9M76
 pas_wallet_address = '86646.2f6e24867ad0c6fd'
 eth_wallet_address = '45f410e92683dAE322d91F2C8b26193b0FC3464D'
 
+text_normal = '\033[0m'
+
+def bold(text):
+    return '\033[1m' + text + text_normal
+
+
+def white(text):
+    return '\033[97m' + text + text_normal
+
+
+def red(text):
+    return '\033[91m' + text + text_normal
+
+
+def yellow(text):
+    return '\033[93m' + text + text_normal
+
+
+def cyan(text):
+    return '\033[96m' + text + text_normal
+
+
+def purple(text):
+    return '\033[95m' + text + text_normal
+
 
 def request_data(url):
     r = requests.get(url).json()
@@ -26,6 +51,7 @@ def format_number(number):
         number /= 1000
     return '%.3f' % number + ' ' + unit_lst[unit]
 
+
 def format_hashrate(hashrate):
     return format_number(float(hashrate)) + 'H/s'
 
@@ -36,11 +62,13 @@ def format_wallet_address(address):
     else:
         return address
 
+
 def convert_to_eth(amount):
     if amount is None:
         return None
     else:
         return amount / 1e18
+
 
 class Worker:
     def __init__(self, name, hashrate, last_seen, rating=None,
@@ -57,11 +85,10 @@ class Worker:
         self.stale_share = stale_share
 
     def __str__(self):
-        s = ''
-        s += '%15s: ' % (self.name)
-        s += 'Hashrate: %s (effective)' % format_hashrate(self.hashrate)
+        s = bold(yellow('%15s: ' % (self.name)))
+        s += 'Hashrate: %s (effective)' % red(format_hashrate(self.hashrate))
         if self.reported_hashrate is not None:
-            s += ', %s (reported)' % format_hashrate(self.reported_hashrate)
+            s += ', %s (reported)' % red(format_hashrate(self.reported_hashrate))
         if self.avg_hashrate is not None:
             if 'h1' in self.avg_hashrate:
                 s += ', %s (1 hour)' % format_hashrate(self.avg_hashrate['h1'])
@@ -161,18 +188,18 @@ class Account:
             self.total_payment += payment.amount
 
     def __str__(self):
-        s = 'Account: ' + format_wallet_address(self.wallet_address) + '\n'
-        s += '\t' + 'Balance: %.10f' % (self.balance)
+        s = bold(white('Account: ' + format_wallet_address(self.wallet_address))) + '\n'
+        s += '\t' + bold(purple('Balance: %.10f' % (self.balance)))
         if self.unconfirmed_balance is not None:
             s += '\t' + 'Unconfirmed Balance: %.10f' % (self.unconfirmed_balance)
         if self.last_seen is not None:
             s += '\t' + 'Last Seen: ' + str(self.last_seen)
         s += '\n' + '\n'
-        s += 'Hashrate: ' + '\n'
-        s += '\t' + 'Current: ' + format_hashrate(self.current_hashrate)
+        s += bold(white('Hashrate:')) + '\n'
+        s += '\t' + 'Current: ' + red(format_hashrate(self.current_hashrate))
         if self.current_reported_hashrate is not None:
             s += '\t' + 'Current Reported: ' \
-                + format_hashrate(self.current_reported_hashrate)
+                + red(format_hashrate(self.current_reported_hashrate))
         if self.avg_hashrate is not None:
             if 'h1' in self.avg_hashrate:
                 s += '\t' + '1 Hour Average: ' \
@@ -187,12 +214,12 @@ class Account:
             s += '\t' + 'Invalid Share: %d (%.2f%%)' % (self.invalid_share, self.invalid_percent)
             s += '\t' + 'Stale Share: %d (%.2f%%)' % (self.stale_share, self.stale_percent) + '\n'
         s += '\n'
-        s += 'Workers:' + '\n'
+        s += bold(white('Workers:')) + '\n'
         s += '\n'.join([str(worker) for worker in self.workers]) + '\n'
         s += '\n'
-        s += 'Payment:' + '\n'
-        s += '\t' + 'Total Amount: ' + str(self.total_payment) + '\n\t'
-        s += '\n\t'.join([str(payment) for payment in self.payments[:4]])
+        s += bold(white('Payment:')) + '\n'
+        s += '\t' + bold(yellow('Total Amount: ' + str(self.total_payment))) + '\n'
+        s += '\t' + '\n\t'.join([str(payment) for payment in self.payments[:4]])
         return s
 
 
@@ -209,7 +236,7 @@ class Price:
         return self.usd
 
     def __str__(self):
-        return 'Price:' + '\n' \
+        return bold(white('Price:')) + '\n' \
             + '\t' + 'USD: $' + str(self.usd) + ',' \
             + '\t' + 'BTC: ' + str(self.btc)
 
@@ -258,12 +285,12 @@ class Estimation:
         self.next_payment_time = (self.payment_limit - balance) / self.hour_coin
 
     def __str__(self):
-        s = 'Estimation:' + '\n'
-        s += '\t' + 'Total: $%.2f' % self.estimated_profit + '\n'
+        s = bold(white('Estimation:')) + '\n'
+        s += '\t' + bold(yellow('Total: $%.2f' % self.estimated_profit)) + '\n'
         s += '\t' + 'Hour: %.10f ($%.2f)' % (self.hour_coin, self.hour_usd)
         s += '\t' + 'Day: %.10f ($%.2f)' % (self.day_coin, self.day_usd)
         s += '\t' + 'Month: %.10f ($%.2f)' % (self.month_coin, self.month_usd) + '\n'
-        s += '\t' + 'Next Payment: %.2f hours' % self.next_payment_time
+        s += '\t' + bold(red('Next Payment: %.2f hours' % self.next_payment_time))
         return s
 
 
@@ -279,7 +306,7 @@ class Network:
         self.difficulty = difficulty
 
     def __str__(self):
-        s = 'Network:' + '\n'
+        s = bold(white('Network:')) + '\n'
         s += '\t' + 'Hashrate: ' + format_hashrate(self.hashrate) + '\n'
         s += '\t' + 'Block Time: %.1fs' % self.block_time + '\n'
         s += '\t' + 'Difficulty: ' + format_number(self.difficulty)
@@ -388,10 +415,10 @@ class NanoPool:
         return self.account.get_total_payment() * self.price.get_usd_price()
 
     def __str__(self):
-        s = self.name + '\n'
-        s += '==================' + '\n'
+        s = bold(cyan(self.name)) + '\n'
+        s += bold(cyan('==================')) + '\n'
         s += '\n'
-        s += 'Pool:' + '\n'
+        s += bold(white('Pool:')) + '\n'
         s += '\t' + 'Hashrate: ' + format_hashrate(self.hashrate) + '\n'
         s += '\t' + 'Payment Limit: ' + str(self.payment_limit) + '\n'
         s += '\n'
@@ -504,10 +531,10 @@ class Ethermine:
             int(data['difficulty']))
 
     def __str__(self):
-        s = self.name + '\n'
-        s += '==================' + '\n'
+        s = bold(cyan(self.name)) + '\n'
+        s += bold(cyan('==================')) + '\n'
         s += '\n'
-        s += 'Pool:' + '\n'
+        s += bold(white('Pool:')) + '\n'
         s += '\t' + 'Hashrate: %s (%.2f%%)' % (format_hashrate(self.hashrate), self.hashrate_percent) + '\n'
         s += '\t' + 'Payment Limit: ' + str(self.payment_limit) + '\n'
         s += '\n'
