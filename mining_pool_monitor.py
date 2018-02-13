@@ -136,6 +136,7 @@ class Account:
         self.invalid_percent = None
         self.stale_percent = None
 
+        self.active_worker = None
         self.workers = None
 
         self.payments = None
@@ -156,7 +157,8 @@ class Account:
     def update(self, balance, current_hashrate, unconfirmed_balance=None,
                current_reported_hashrate=None, avg_hashrate=None,
                last_seen=None,
-               valid_share=None, invalid_share=None, stale_share=None):
+               valid_share=None, invalid_share=None, stale_share=None,
+               active_worker=None):
         self.balance = balance
         self.unconfirmed_balance = unconfirmed_balance
         self.current_hashrate = current_hashrate
@@ -171,7 +173,7 @@ class Account:
             self.valid_percent = valid_share / total_share * 100.0
             self.invalid_percent = invalid_share / total_share * 100.0
             self.stale_percent = stale_share / total_share * 100.0
-
+        self.active_worker = active_worker
 
     def update_workers(self, workers):
         self.workers = workers
@@ -214,7 +216,10 @@ class Account:
             s += '\t' + 'Invalid Share: %d (%.2f%%)' % (self.invalid_share, self.invalid_percent)
             s += '\t' + 'Stale Share: %d (%.2f%%)' % (self.stale_share, self.stale_percent) + '\n'
         s += '\n'
-        s += bold(white('Workers:')) + '\n'
+        s += bold(white('Workers:'))
+        if self.active_worker is not None:
+            s += ' ' + cyan(bold(str(self.active_worker) + ' Active'))
+        s += '\n'
         s += '\n'.join([str(worker) for worker in self.workers]) + '\n'
         s += '\n'
         s += bold(white('Payment:')) + '\n'
@@ -465,7 +470,8 @@ class Ethermine:
             last_seen=datetime.datetime.fromtimestamp(data['lastSeen']),
             valid_share=int(data['validShares']),
             invalid_share=int(data['invalidShares']),
-            stale_share=int(data['staleShares']))
+            stale_share=int(data['staleShares']),
+            active_worker=int(data['activeWorkers']))
 
         self.__update_account_workers()
         self.__update_account_payments()
