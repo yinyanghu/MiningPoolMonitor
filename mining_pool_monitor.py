@@ -544,7 +544,7 @@ class Ethermine:
         s += '\n'
         s += str(self.price) + '\n'
         s += '\n'
-        s += str(self.estimation) + '\n'
+        s += str(self.estimation)
         return s
 
 
