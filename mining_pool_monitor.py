@@ -52,8 +52,8 @@ def format_number(number):
     return '%.3f' % number + ' ' + unit_lst[unit]
 
 
-def format_hashrate(hashrate):
-    return format_number(float(hashrate)) + 'H/s'
+def format_hashrate(hashrate, base_unit):
+    return format_number(float(hashrate) * base_unit) + 'H/s'
 
 
 def format_wallet_address(address):
@@ -71,12 +71,13 @@ def convert_to_eth(amount):
 
 
 class Worker:
-    def __init__(self, name, hashrate, last_seen, rating=None,
+    def __init__(self, name, hashrate, base_unit, last_seen, rating=None,
                  avg_hashrate=None, reported_hashrate=None,
                  valid_share=None, invalid_share=None, stale_share=None):
         self.name = name
         self.rating = rating
         self.hashrate = hashrate
+        self.base_unit = base_unit
         self.last_seen = last_seen
         self.avg_hashrate = avg_hashrate
         self.reported_hashrate = reported_hashrate
@@ -86,14 +87,14 @@ class Worker:
 
     def __str__(self):
         s = bold(yellow('%15s: ' % (self.name)))
-        s += 'Hashrate: %s (effective)' % red(format_hashrate(self.hashrate))
+        s += 'Hashrate: %s (effective)' % red(format_hashrate(self.hashrate, self.base_unit))
         if self.reported_hashrate is not None:
-            s += ', %s (reported)' % red(format_hashrate(self.reported_hashrate))
+            s += ', %s (reported)' % red(format_hashrate(self.reported_hashrate, self.base_unit))
         if self.avg_hashrate is not None:
             if 'h1' in self.avg_hashrate:
-                s += ', %s (1 hour)' % format_hashrate(self.avg_hashrate['h1'])
+                s += ', %s (1 hour)' % format_hashrate(self.avg_hashrate['h1'], self.base_unit)
             if 'h24' in self.avg_hashrate:
-                s += ', %s (1 day)' % format_hashrate(self.avg_hashrate['h24'])
+                s += ', %s (1 day)' % format_hashrate(self.avg_hashrate['h24'], self.base_unit)
 
         s += ';\n' + (' ' * 17) + 'Last Seen: ' + str(self.last_seen)
         if self.rating is not None:
@@ -119,12 +120,13 @@ class Payment:
 
 
 class Account:
-    def __init__(self, wallet_address):
+    def __init__(self, wallet_address, base_unit):
         self.wallet_address = wallet_address
 
         self.balance = 0
         self.unconfirmed_balance = None
         self.current_hashrate = 0
+        self.base_unit = base_unit
         self.current_reported_hashrate = None
         self.avg_hashrate = None
 
@@ -198,18 +200,18 @@ class Account:
             s += '\t' + 'Last Seen: ' + str(self.last_seen)
         s += '\n' + '\n'
         s += bold(white('Hashrate:')) + '\n'
-        s += '\t' + 'Current: ' + red(format_hashrate(self.current_hashrate))
+        s += '\t' + 'Current: ' + red(format_hashrate(self.current_hashrate, self.base_unit))
         if self.current_reported_hashrate is not None:
             s += '\t' + 'Current Reported: ' \
-                + red(format_hashrate(self.current_reported_hashrate))
+                + red(format_hashrate(self.current_reported_hashrate, self.base_unit))
         if self.avg_hashrate is not None:
             if 'h1' in self.avg_hashrate:
                 s += '\t' + '1 Hour Average: ' \
-                    + format_hashrate(self.avg_hashrate['h1'])
+                    + format_hashrate(self.avg_hashrate['h1'], self.base_unit)
 
             if 'h24' in self.avg_hashrate:
                 s += '\t' + '1 Day Average: ' \
-                    + format_hashrate(self.avg_hashrate['h24'])
+                    + format_hashrate(self.avg_hashrate['h24'], self.base_unit)
         s += '\n'
         if (self.valid_share is not None) and (self.invalid_share is not None) and (self.stale_share is not None):
             s += '\t' + 'Valid Share: %d (%.2f%%)' % (self.valid_share, self.valid_percent)
@@ -251,7 +253,6 @@ class Estimation:
         self.payment_limit = payment_limit
 
         self.estimated_profit = 0
-        self.hashrate = 0
 
         self.hour_coin = 0
         self.hour_usd = 0
@@ -262,9 +263,8 @@ class Estimation:
 
         self.next_payment_time = 0
 
-    def update(self, hashrate, estimated_profit, balance,
+    def update(self, estimated_profit, balance,
                hour_coin, hour_usd, day_coin, day_usd, month_coin, month_usd):
-        self.hashrate = hashrate
         self.estimated_profit = estimated_profit
 
         self.hour_coin = hour_coin
@@ -300,10 +300,11 @@ class Estimation:
 
 
 class Network:
-    def __init__(self):
+    def __init__(self, base_unit):
         self.hashrate = 0
         self.block_time = 0
         self.difficulty = 0
+        self.base_unit = base_unit
 
     def update(self, hashrate, block_time, difficulty):
         self.hashrate = hashrate
@@ -312,14 +313,14 @@ class Network:
 
     def __str__(self):
         s = bold(white('Network:')) + '\n'
-        s += '\t' + 'Hashrate: ' + format_hashrate(self.hashrate) + '\n'
+        s += '\t' + 'Hashrate: ' + format_hashrate(self.hashrate, self.base_unit) + '\n'
         s += '\t' + 'Block Time: %.1fs' % self.block_time + '\n'
         s += '\t' + 'Difficulty: ' + format_number(self.difficulty)
         return s
 
 
 class NanoPool:
-    def __init__(self, name, coin, wallet_address):
+    def __init__(self, name, coin, base_unit, wallet_address):
         self.api = 'https://api.nanopool.org/v1/'
         self.name = name
         self.coin = coin
@@ -327,8 +328,9 @@ class NanoPool:
         self.payment_limit = self.__update_payment_limit()
 
         self.hashrate = 0
+        self.base_unit = base_unit
 
-        self.account = Account(wallet_address)
+        self.account = Account(wallet_address, base_unit)
         self.price = Price()
 
         self.estimation = Estimation(self.payment_limit)
@@ -370,6 +372,7 @@ class NanoPool:
                 name=one['id'],
                 rating=int(one['rating']),
                 hashrate=float(one['hashrate']),
+                base_unit=self.base_unit,
                 last_seen=datetime.datetime.fromtimestamp(one['lastshare']),
                 avg_hashrate=one)
             workers.append(worker)
@@ -406,7 +409,6 @@ class NanoPool:
         data = request_data(url)
 
         self.estimation.update(
-            current_hashrate,
             self.__get_profit(),
             self.account.get_all_balance(),
             float(data['hour']['coins']),
@@ -424,7 +426,7 @@ class NanoPool:
         s += bold(cyan('==================')) + '\n'
         s += '\n'
         s += bold(white('Pool:')) + '\n'
-        s += '\t' + 'Hashrate: ' + format_hashrate(self.hashrate) + '\n'
+        s += '\t' + 'Hashrate: ' + format_hashrate(self.hashrate, self.base_unit) + '\n'
         s += '\t' + 'Payment Limit: ' + str(self.payment_limit) + '\n'
         s += '\n'
         s += str(self.account) + '\n'
@@ -443,9 +445,9 @@ class Ethermine:
         self.payment_limit = self.__update_payment_limit()
 
         self.hashrate = 0
-        self.account = Account(wallet_address)
+        self.account = Account(wallet_address, 1)
         self.price = Price()
-        self.network = Network()
+        self.network = Network(1)
         self.estimation = Estimation(self.payment_limit)
 
     def update(self):
@@ -492,6 +494,7 @@ class Ethermine:
                 name=one['worker'],
                 last_seen=datetime.datetime.fromtimestamp(one['lastSeen']),
                 hashrate=float(one['currentHashrate']),
+                base_unit = 1,
                 avg_hashrate={'h24': float(one['averageHashrate'])},
                 reported_hashrate=float(one['reportedHashrate']),
                 valid_share=int(one['validShares']),
@@ -541,7 +544,7 @@ class Ethermine:
         s += bold(cyan('==================')) + '\n'
         s += '\n'
         s += bold(white('Pool:')) + '\n'
-        s += '\t' + 'Hashrate: %s (%.2f%%)' % (format_hashrate(self.hashrate), self.hashrate_percent) + '\n'
+        s += '\t' + 'Hashrate: %s (%.2f%%)' % (format_hashrate(self.hashrate, 1), self.hashrate_percent) + '\n'
         s += '\t' + 'Payment Limit: ' + str(self.payment_limit) + '\n'
         s += '\n'
         s += str(self.network) + '\n'
@@ -554,8 +557,8 @@ class Ethermine:
         return s
 
 
-etn_nanopool = NanoPool('Electroneum (ETN)', 'etn', etn_wallet_address)
-pas_nanopool = NanoPool('PascalCoin (PAS)', 'pasc', pas_wallet_address)
+etn_nanopool = NanoPool('Electroneum (ETN)', 'etn', 1, etn_wallet_address)
+pas_nanopool = NanoPool('PascalCoin (PAS)', 'pasc', 1000000, pas_wallet_address)
 eth_ethermine = Ethermine('Ethereum (ETH)', eth_wallet_address)
 
 
