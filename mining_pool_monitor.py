@@ -65,7 +65,7 @@ def format_wallet_address(address):
 
 def convert_to_eth(amount):
     if amount is None:
-        return None
+        return 0
     else:
         return amount / 1e18
 
