@@ -274,7 +274,10 @@ class Estimation:
         self.month_coin = month_coin
         self.month_usd = month_usd
 
-        self.next_payment_time = max(0, (self.payment_limit - balance) / self.hour_coin)
+        if self.hour_coin == 0:
+            self.next_payment_time = float('inf')
+        else:
+            self.next_payment_time = max(0, (self.payment_limit - balance) / self.hour_coin)
 
     def update_per_min(self, estimated_profit, balance,
                        minute_coin, minute_usd):
@@ -405,18 +408,21 @@ class NanoPool:
 
     def __update_estimation(self):
         current_hashrate = self.account.get_hashrate()
-        url = self.api + self.coin + '/approximated_earnings/' + str(current_hashrate)
-        data = request_data(url)
+        if current_hashrate == 0:
+            self.estimation.update(self.__get_profit(), self.account.get_all_balance(), 0, 0, 0, 0, 0, 0)
+        else:
+            url = self.api + self.coin + '/approximated_earnings/' + str(current_hashrate)
+            data = request_data(url)
 
-        self.estimation.update(
-            self.__get_profit(),
-            self.account.get_all_balance(),
-            float(data['hour']['coins']),
-            float(data['hour']['dollars']),
-            float(data['day']['coins']),
-            float(data['day']['dollars']),
-            float(data['month']['coins']),
-            float(data['month']['dollars']))
+            self.estimation.update(
+                self.__get_profit(),
+                self.account.get_all_balance(),
+                float(data['hour']['coins']),
+                float(data['hour']['dollars']),
+                float(data['day']['coins']),
+                float(data['day']['dollars']),
+                float(data['month']['coins']),
+                float(data['month']['dollars']))
 
     def __get_profit(self):
         return self.account.get_total_payment() * self.price.get_usd_price()
