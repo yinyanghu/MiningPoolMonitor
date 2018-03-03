@@ -53,7 +53,7 @@ def format_number(number):
 
 
 def format_hashrate(hashrate, base_unit):
-    return format_number(float(hashrate) * base_unit) + 'H/s'
+    return format_number(hashrate * base_unit) + 'H/s'
 
 
 def format_wallet_address(address):
@@ -68,6 +68,19 @@ def convert_to_eth(amount):
         return 0
     else:
         return amount / 1e18
+
+
+def convert_to_hashrate(hashrate):
+    if hashrate is None:
+        return 0
+    elif isinstance(hashrate, dict):
+        hashrates = {}
+        for key in hashrate:
+            if key[0] == 'h' and key[1:].isdigit():
+                hashrates[key] = float(hashrate[key])
+        return hashrates
+    else:
+        return float(hashrate)
 
 
 class Worker:
@@ -151,7 +164,7 @@ class Account:
         return total
 
     def get_hashrate(self):
-        return float(self.avg_hashrate['h1'])
+        return self.avg_hashrate['h1']
 
     def get_total_payment(self):
         return self.total_payment
@@ -352,7 +365,7 @@ class NanoPool:
     def __update_account(self):
         url = self.api + self.coin + '/reportedhashrate/' + self.wallet_address
         data = request_data(url)
-        current_reported_hashrate=float(data)
+        current_reported_hashrate=convert_to_hashrate(data)
 
         url = self.api + self.coin + '/user/' + self.wallet_address
         data = request_data(url)
@@ -361,8 +374,8 @@ class NanoPool:
             balance=float(data['balance']),
             unconfirmed_balance=float(data['unconfirmed_balance']),
             current_reported_hashrate=current_reported_hashrate,
-            current_hashrate=float(data['hashrate']),
-            avg_hashrate=data['avgHashrate'])
+            current_hashrate=convert_to_hashrate(data['hashrate']),
+            avg_hashrate=convert_to_hashrate(data['avgHashrate']))
 
         self.__update_account_workers(data['workers'])
 
@@ -374,10 +387,10 @@ class NanoPool:
             worker = Worker(
                 name=one['id'],
                 rating=int(one['rating']),
-                hashrate=float(one['hashrate']),
+                hashrate=convert_to_hashrate(one['hashrate']),
                 base_unit=self.base_unit,
                 last_seen=datetime.datetime.fromtimestamp(one['lastshare']),
-                avg_hashrate=one)
+                avg_hashrate=convert_to_hashrate(one))
             workers.append(worker)
         workers.sort(key=lambda worker: worker.hashrate, reverse=True)
         self.account.update_workers(workers)
@@ -397,7 +410,7 @@ class NanoPool:
 
     def __update_pool_hashrate(self):
         url = self.api + self.coin + '/pool/hashrate'
-        self.hashrate = float(request_data(url))
+        self.hashrate = convert_to_hashrate(request_data(url))
 
     def __update_price(self):
         url = self.api + self.coin + '/prices'
@@ -472,9 +485,9 @@ class Ethermine:
         self.account.update(
             balance=convert_to_eth(data['unpaid']),
             unconfirmed_balance=convert_to_eth(data['unconfirmed']),
-            current_hashrate=float(data['currentHashrate']),
-            current_reported_hashrate=float(data['reportedHashrate']),
-            avg_hashrate={'h24': float(data['averageHashrate'])},
+            current_hashrate=convert_to_hashrate(data['currentHashrate']),
+            current_reported_hashrate=convert_to_hashrate(data['reportedHashrate']),
+            avg_hashrate={'h24': convert_to_hashrate(data['averageHashrate'])},
             last_seen=datetime.datetime.fromtimestamp(data['lastSeen']),
             valid_share=int(data['validShares']),
             invalid_share=int(data['invalidShares']),
@@ -499,10 +512,10 @@ class Ethermine:
             worker = Worker(
                 name=one['worker'],
                 last_seen=datetime.datetime.fromtimestamp(one['lastSeen']),
-                hashrate=float(one['currentHashrate']),
+                hashrate=convert_to_hashrate(one['currentHashrate']),
                 base_unit = 1,
-                avg_hashrate={'h24': float(one['averageHashrate'])},
-                reported_hashrate=float(one['reportedHashrate']),
+                avg_hashrate={'h24': convert_to_hashrate(one['averageHashrate'])},
+                reported_hashrate=convert_to_hashrate(one['reportedHashrate']),
                 valid_share=int(one['validShares']),
                 invalid_share=int(one['invalidShares']),
                 stale_share=int(one['staleShares']))
