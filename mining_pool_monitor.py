@@ -511,7 +511,7 @@ class Ethermine:
         for one in data:
             worker = Worker(
                 name=one['worker'],
-                last_seen=datetime.datetime.fromtimestamp(one['lastSeen']),
+                last_seen=datetime.datetime.fromtimestamp(one['lastSeen']) if one['lastSeen'] is not None else '-',
                 hashrate=convert_to_hashrate(one['currentHashrate']),
                 base_unit = 1,
                 avg_hashrate={'h24': convert_to_hashrate(one['averageHashrate'])},
