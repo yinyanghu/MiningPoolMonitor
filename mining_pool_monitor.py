@@ -509,6 +509,7 @@ class Ethermine:
         data = request_data(url)
         workers = []
         for one in data:
+            # print(one['validShares'])
             worker = Worker(
                 name=one['worker'],
                 last_seen=datetime.datetime.fromtimestamp(one['lastSeen']) if one['lastSeen'] is not None else '-',
@@ -516,9 +517,9 @@ class Ethermine:
                 base_unit = 1,
                 avg_hashrate={'h24': convert_to_hashrate(one['averageHashrate'])},
                 reported_hashrate=convert_to_hashrate(one['reportedHashrate']),
-                valid_share=int(one['validShares']),
-                invalid_share=int(one['invalidShares']),
-                stale_share=int(one['staleShares']))
+                valid_share=int(one['validShares']) if one['validShares'] is not None else -1,
+                invalid_share=int(one['invalidShares']) if one['invalidShares'] is not None else -1,
+                stale_share=int(one['staleShares']) if one['staleShares'] is not None else -1)
             workers.append(worker)
         self.account.update_workers(workers)
 
