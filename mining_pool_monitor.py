@@ -34,6 +34,8 @@ def purple(text):
 
 
 def request_data(url):
+    # print(url)
+    # print(requests.get(url))
     r = requests.get(url).json()
     if r['status']:
         return r['data']
@@ -598,6 +600,7 @@ def eth():
 
 
 if __name__ == '__main__':
+    etn()
     while True:
         os.system('clear')
         eth()
